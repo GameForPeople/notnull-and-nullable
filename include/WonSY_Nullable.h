@@ -51,6 +51,10 @@ namespace WonSY
 			- 불필요해보이는 생성자들 제거, 쓸데없이 복잡해보인다.
 			- 메모리 해제 함수 명을, Clear에서, Release로 변경처리 하였습니다. ( T가 STL Container일 경우, container의 Clear함수와 착오할 수 있어, 표준과 중복되지않는 이름으로 변경합니다. 
 			- EXPAND_TO_NOTNULL과 관련하여, 반복문에서 쓰일 매크로 추가하였습니다.
+
+		// 0.6
+			- ElementType가 인자로 전달되었을 때, enable_shared_from_this()의 상속 여부에 따라, shared_from_this() 처리하던 로직은 잘못된것임이 확인되어 제거합니다.
+			- 별칭 WsyNullableRaw, WsyNullableShared 추가하였습니다.
 	*/
 
 	template < typename T >
@@ -142,14 +146,15 @@ namespace WonSY
 			}
 			else if constexpr ( IsSharedPtr< Type >::value )
 			{
-				if constexpr ( std::derived_from< ElementType, std::enable_shared_from_this< ElementType > > )
-				{
-					m_data = dataElement.shared_from_this();
-				}
-				else
-				{
+				// [ ver 0.6 ] 으악
+				//if constexpr ( std::derived_from< ElementType, std::enable_shared_from_this< ElementType > > )
+				//{
+				//	m_data = dataElement.shared_from_this();
+				//}
+				//else
+				//{
 					m_data = std::make_shared< ElementType >( dataElement );
-				}
+				//}
 			}
 			else
 			{
@@ -201,6 +206,12 @@ namespace WonSY
 
 template< typename T >
 using WsyNullable = WonSY::Nullable< T >;
+
+template< typename T >
+using WsyNullableRaw = WonSY::Nullable< WsyRawPtr< T > >;
+
+template< typename T >
+using WsyNullableShared = WonSY::Nullable< WsySharedPtr< T > >;
 
 #define RETURN_VOID (void)(0)
 

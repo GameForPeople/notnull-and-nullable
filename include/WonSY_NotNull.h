@@ -42,6 +42,11 @@ namespace WonSY
 			- NotNull( const ElementType& dataElement )을 IsRawPtr< T >로 처리 시, 적절한 메모리 회수 인터페이스 제공이 어렵기 때문에,
 			  RawPtr로 Notnull을 바로 만드는 케이스를 제한합니다.
 
+		// 0.4 
+			- T가 shared_ptr 일 경우, UseCount를 반환할 수 있도록 처리합니다.
+			- ElementType가 인자로 전달되었을 때, enable_shared_from_this()의 상속 여부에 따라, shared_from_this() 처리하던 로직은 잘못된것임이 확인되어 제거합니다.
+			- 별칭 WsyNotNullRaw, WsyNotNullShared, WsyNotNullUnique 추가하였습니다.
+
 		[ Known Issue ]
 			- [ Ver 0.3에서 제한 ]IsRawPtr< T >로 NotNull로 바로 만든 케이스의 경우, 메모리를 해제해줄 방법이 없어, 메모리릭이 발생한다. 이와 관련되어 개선사항의 고려가 필요하다.
 			- New가 실패하는 케이스에 대해서는 정상적으로 처리하지 못할 수 있습니다.
@@ -95,14 +100,15 @@ namespace WonSY
 			}
 			else if constexpr ( WonSY::IsSharedPtr< Type >::value )
 			{
-				if constexpr ( std::derived_from< ElementType, std::enable_shared_from_this< ElementType > > )
-				{
-					m_data = dataElement.shared_from_this();
-				}
-				else
-				{
+				// [ ver 0.6 ] 으악;
+				//if constexpr ( std::derived_from< ElementType, std::enable_shared_from_this< ElementType > > )
+				//{
+				//	m_data = dataElement.shared_from_this();
+				//}
+				//else
+				//{
 					m_data = std::make_shared< ElementType >( dataElement );
-				}
+				//}
 			}
 			else if constexpr ( WonSY::IsUniquePtr< Type >::value )
 			{
@@ -171,10 +177,30 @@ namespace WonSY
 	public:
 #pragma endregion
 
+		long GetUseCount() const
+		{
+			if constexpr ( WonSY::IsSharedPtr< Type >::value )
+			{
+				return m_data.use_count();
+			}
+			else
+			{
+				WONSY_FAIL_STATIC_ASSERT( "unSupported Type!" );
+			}
+		}
 	};
 }
 
 template< typename T >
 using WsyNotNull = WonSY::NotNull< T >;
+
+template< typename T >
+using WsyNotNullRaw = WonSY::NotNull< WsyRawPtr< T > >;
+
+template< typename T >
+using WsyNotNullShared = WonSY::NotNull< WsySharedPtr< T > >;
+
+template< typename T >
+using WsyNotNullUnique = WonSY::NotNull< WsyUniquePtr< T > >;
 
 #endif

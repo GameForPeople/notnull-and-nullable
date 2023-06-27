@@ -93,4 +93,13 @@ namespace WonSY
 template< class T >
 using WsyElementType = WonSY::ElementType< T >;
 
+template< class T >
+using WsyRawPtr = T*;
+
+template< class T >
+using WsySharedPtr = std::shared_ptr< T >;
+
+template< class T >
+using WsyUniquePtr = std::unique_ptr< T >;
+
 #endif
