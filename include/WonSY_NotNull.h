@@ -47,6 +47,9 @@ namespace WonSY
 			- ElementType가 인자로 전달되었을 때, enable_shared_from_this()의 상속 여부에 따라, shared_from_this() 처리하던 로직은 잘못된것임이 확인되어 제거합니다.
 			- 별칭 WsyNotNullRaw, WsyNotNullShared, WsyNotNullUnique 추가하였습니다.
 
+		// 0.5
+			- ElementType&() operaotr 의 처리가 의도와 다르게 동작하지 않는 케이스를 확인해서, 그 경우의 명시적으로 멤버함수 "Data()"를 사용할 수 있도록 추가하였습니다.
+
 		[ Known Issue ]
 			- [ Ver 0.3에서 제한 ]IsRawPtr< T >로 NotNull로 바로 만든 케이스의 경우, 메모리를 해제해줄 방법이 없어, 메모리릭이 발생한다. 이와 관련되어 개선사항의 고려가 필요하다.
 			- New가 실패하는 케이스에 대해서는 정상적으로 처리하지 못할 수 있습니다.
@@ -100,7 +103,7 @@ namespace WonSY
 			}
 			else if constexpr ( WonSY::IsSharedPtr< Type >::value )
 			{
-				// [ ver 0.6 ] 으악;
+				// [ ver 0.4 ] 으악;
 				//if constexpr ( std::derived_from< ElementType, std::enable_shared_from_this< ElementType > > )
 				//{
 				//	m_data = dataElement.shared_from_this();
@@ -144,6 +147,12 @@ namespace WonSY
 
 #pragma region [ Operator ]
 		operator ElementType&() const noexcept
+		{
+			return *m_data;
+		}
+
+		// 위 Opertator이 의도와 다르게, 동작되지 않을 때 사용합니다.
+		ElementType& operator()() const noexcept
 		{
 			return *m_data;
 		}
